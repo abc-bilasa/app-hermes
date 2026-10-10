@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Plan & To-Do Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h1 class="text-2xl font-bold text-slate-900">Project Plan Dashboard</h1>
+            <p class="text-slate-500 text-sm mt-1">Submit your project details below to let your Hermes agent structure it instantly.</p>
+        </header>
+
+        <!-- Input Form Section -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <label for="projectInput" class="block font-semibold text-sm text-slate-700">Project Description / Customer Input</label>
+            <textarea id="projectInput" rows="4" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="e.g., We need a mobile e-commerce app for our local bakery with user login, product catalog, and payment gateway..."></textarea>
+            <button onclick="submitToHermes()" id="submitBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl transition text-sm shadow-sm cursor-pointer">
+                Generate Plan via Hermes
+            </button>
+        </section>
+
+        <!-- Dashboard Output Section -->
+        <section id="outputSection" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden space-y-6">
+            <h2 class="text-lg font-bold text-slate-900 border-b pb-3">Structured Project Dashboard</h2>
+            <div id="dashboardContent" class="space-y-4 text-sm text-slate-700">
+                <!-- Dynamic content rendered here -->
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        async function submitToHermes() {
+            const text = document.getElementById('projectInput').value.trim();
+            const btn = document.getElementById('submitBtn');
+            const outputSection = document.getElementById('outputSection');
+            const dashboardContent = document.getElementById('dashboardContent');
+
+            if (!text) {
+                alert('Please enter some project details.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Analyzing with Hermes...';
+
+            try {
+                // Call your backend/webhook endpoint that talks to your Hermes agent
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: text })
+                });
+
+                const data = await response.json();
+                
+                // Render output into HTML dashboard format
+                dashboardContent.innerHTML = `
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h3 class="font-semibold text-indigo-900 mb-1">Executive Summary</h3>
+                        <p>${data.summary || text}</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-900 mb-2">Phased To-Do List</h3>
+                        <div class="space-y-2">
+                            ${(data.tasks || ['Finalize requirements', 'Set up architecture', 'Begin development']).map(task => `
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                    <span>\${task}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                outputSection.classList.remove('hidden');
+            } catch (err) {
+                alert('Error connecting to Hermes backend. Make sure your server endpoint is running.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate Plan via Hermes';
+            }
+        }
+    </script>
+</body>
+</html>
